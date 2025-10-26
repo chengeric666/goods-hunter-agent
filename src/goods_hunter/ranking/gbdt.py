@@ -56,13 +56,20 @@ def build_default_ranker() -> GBDTRanker:
     return GBDTRanker(
         feature_weights={
             "user_click_rate_7d": 0.25,
-            "user_purchase_rate_30d": 0.4,
+            "user_purchase_rate_30d": 0.35,
+            "preferred_category_electronics": 0.12,
+            "preferred_category_beauty": 0.12,
+            "preferred_category_home": 0.1,
+            "preferred_price_low": 0.05,
+            "preferred_price_mid": 0.04,
+            "preferred_price_high": 0.03,
             "item_ctr": 0.2,
             "item_conversion_rate": 0.3,
             "category_match_score": 0.1,
-            "preferred_category_electronics": 0.15,
-            "preferred_category_beauty": 0.12,
+            "logistics_score": 0.08,
             "inventory_status": 0.05,
+            "current_session_category": 0.06,
+            "current_session_price_band": 0.04,
         }
     )
 

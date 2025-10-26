@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Sequence
 
+from ..data.seed_data import SeedData, default_seed_data
+
 
 @dataclass
 class ItemCandidate:
@@ -97,21 +99,13 @@ class RecallEngine:
         return list(deduplicated.values())
 
 
-def build_default_recall_engine() -> RecallEngine:
+def build_default_recall_engine(seed_data: SeedData | None = None) -> RecallEngine:
     """创建默认召回引擎。"""
 
-    cf = BehaviorCFRecall(
-        co_click_matrix={
-            "u_1001": {"sku_2001": 0.9, "sku_2002": 0.6},
-            "u_1002": {"sku_2002": 0.7, "sku_2003": 0.5},
-        }
-    )
-    embedding = ContentEmbeddingRecall(
-        anchor_vector={"sku_2001": 0.85, "sku_2002": 0.75, "sku_2003": 0.6}
-    )
-    trending = CategoryTrendingRecall(
-        category_top_items={"electronics": ["sku_2001", "sku_2004", "sku_2005"]}
-    )
+    payload = seed_data or default_seed_data()
+    cf = BehaviorCFRecall(co_click_matrix=payload.co_click_matrix)
+    embedding = ContentEmbeddingRecall(anchor_vector=payload.content_embedding)
+    trending = CategoryTrendingRecall(category_top_items=payload.category_top_items)
     return RecallEngine([cf, embedding, trending])
 
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Iterable, Optional
 
+from .seed_data import SeedData, default_seed_data
+
 
 @dataclass
 class FeatureView:
@@ -62,56 +64,15 @@ class FeatureStore:
             context_features=self.get_context_features(context_id),
         )
 
-    def warmup(self) -> None:
+    def warmup(self, seed_data: SeedData | None = None) -> None:
         """写入样例数据，便于端到端联调。"""
 
         if self._user_features:
             return
-        self.batch_write_user_features(
-            {
-                "u_1001": {
-                    "user_click_rate_7d": 0.35,
-                    "user_purchase_rate_30d": 0.08,
-                    "preferred_category_electronics": 1.0,
-                },
-                "u_1002": {
-                    "user_click_rate_7d": 0.2,
-                    "user_purchase_rate_30d": 0.03,
-                    "preferred_category_beauty": 1.0,
-                },
-            }
-        )
-        self.batch_write_item_features(
-            {
-                "sku_2001": {
-                    "item_ctr": 0.18,
-                    "item_conversion_rate": 0.05,
-                    "price_bucket": 2.0,
-                    "category_match_score": 0.8,
-                },
-                "sku_2002": {
-                    "item_ctr": 0.12,
-                    "item_conversion_rate": 0.07,
-                    "price_bucket": 3.0,
-                    "category_match_score": 0.9,
-                },
-                "sku_2003": {
-                    "item_ctr": 0.08,
-                    "item_conversion_rate": 0.02,
-                    "price_bucket": 1.0,
-                    "category_match_score": 0.6,
-                },
-            }
-        )
-        self.batch_write_context_features(
-            {
-                "session_electronics": {
-                    "current_session_category": 1.0,
-                    "current_session_price_band": 2.0,
-                    "inventory_status": 0.9,
-                }
-            }
-        )
+        payload = seed_data or default_seed_data()
+        self.batch_write_user_features(payload.user_features)
+        self.batch_write_item_features(payload.item_features)
+        self.batch_write_context_features(payload.context_features)
 
     def stream_update(
         self,
@@ -121,6 +82,24 @@ class FeatureStore:
         """模拟实时特征更新。"""
 
         current = self._user_features.setdefault(user_id, {})
+        for payload in feature_updates:
+            current.update(payload)
+
+    def stream_update_item(
+        self, item_id: str, feature_updates: Iterable[Dict[str, float]]
+    ) -> None:
+        """模拟实时商品特征更新。"""
+
+        current = self._item_features.setdefault(item_id, {})
+        for payload in feature_updates:
+            current.update(payload)
+
+    def stream_update_context(
+        self, context_id: str, feature_updates: Iterable[Dict[str, float]]
+    ) -> None:
+        """模拟实时上下文特征更新。"""
+
+        current = self._context_features.setdefault(context_id, {})
         for payload in feature_updates:
             current.update(payload)
 
